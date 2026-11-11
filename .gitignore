@@ -5,8 +5,8 @@ __pycache__/
 .env.*
 !.env.example
 config/runtime.json
-data/
-logs/
+/data/
+/logs/
 near/vault/target/
 # The signal generator is private and never committed.
-dashboard/
+/dashboard/

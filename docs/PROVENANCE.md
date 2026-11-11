@@ -59,3 +59,11 @@ Baseline files changed in the window:
 
 near-sdk (Rust), cargo-near, near-cli-rs, FastAPI, web3.py, eth-account.
 AI coding assistance (Claude) was used throughout the window.
+
+## A correction to the `pre-hackathon` tag
+
+`zcastor/data/` (`journal.py`, `ledger.py`, `__init__.py`) is baseline code, but
+a `.gitignore` rule meant for the top-level `data/` folder kept it out of the
+first two commits. It was added on 11 November 2026 in the commit that fixed the
+rule. It appears in the diff from `pre-hackathon` as new; it is not hackathon
+work and is not offered for judging.
