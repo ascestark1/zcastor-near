@@ -1,0 +1,25 @@
+{
+  "what": "Each agent account's full-access key was deleted. Its only key is a function-call key limited to request_permit, settle and sign_anchor on the vault. The account can no longer transfer NEAR, deploy code, add keys or call any other contract.",
+  "date": "2026-11-11",
+  "network": "NEAR testnet",
+  "vault": "vault.zcastor-desk.testnet",
+  "agents": {
+    "btc.zcastor-desk.testnet": {
+      "function_call_key": "ed25519:9Fn5dPVsykpAVjKdETToa9ye699pq6VPV1FfpXcphnWz",
+      "add_key_tx": "HpHXqyKB5ixYU82jz3wY6KHGun6oYFrP6wpnNkKuPzzZ",
+      "permit_signed_with_narrow_key_tx": "9f7MEurx1L6FbvsW191dicyWjgKtcLQgjTpCeLPQh7dr",
+      "deleted_full_access_key": "ed25519:M5KWLUZa8gZfwYC8VeD57AeN3gbvnzfohoAer6Jn37o",
+      "delete_key_tx": "Fira4ziZbaFo9VUmCghdMvaqopxSELZ6eTsfpjv3n7Mh",
+      "transfer_attempt": "send 0.01 NEAR to the owner -> 'Error: Transaction requires a full permission access key.'"
+    },
+    "eth.zcastor-desk.testnet": {
+      "function_call_key": "ed25519:DMeRaAySfzogvFBqhZZ2WLfcvPY5n8S1o6EZ7ToKJ6uh",
+      "add_key_tx": "Gf6MNiruNE3EmpcF2jBSCevvopLGq4enycZxfWVQ8guw",
+      "permit_signed_with_narrow_key_tx": "9G1c3nVQb7ybuTgSFD7Aweev5qGdcXZTSYSppo2vsE4X",
+      "deleted_full_access_key": "ed25519:HrtDJrJmWdvomoghdnGUx2aboFCsqEmHdVfJXvusWq5L",
+      "delete_key_tx": "4mc6j4DrScbwU7djpxVoK9yUDJRYTGgrJpbdSfQF6XEk",
+      "transfer_attempt": "send 0.01 NEAR to the owner -> 'Error: Transaction requires a full permission access key.'"
+    }
+  },
+  "check_it": "near account list-keys btc.zcastor-desk.testnet network-config testnet now   (or: python near/judge.py --live)"
+}

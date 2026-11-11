@@ -7,9 +7,9 @@
 #   vault.<you>      the contract
 #   reporter.<you>   may post equity; can only make the desk stricter
 #   btc.<you>, eth.<you>   agents. The vault only lets a registered agent call
-#                    request_permit, settle and sign_anchor. (Swapping each
-#                    agent's key for a function-call key limited to those three
-#                    methods is the next step, after this deploy is confirmed.)
+#                    request_permit, settle and sign_anchor. Afterwards,
+#                    near/restrict_agent_keys.sh swaps each agent's key for a
+#                    function-call key limited to those three methods.
 #
 # Testnet only: no real funds. Safe to re-run; steps that are already done say
 # so and the script carries on. Keys land in ~/.near-credentials/testnet/.

@@ -47,8 +47,11 @@ as `vault_refused:<reason>`; an unreachable vault means no order. The engine
 also posts equity to the vault every five minutes, which is what arms the
 dead-man halt. `near/vault_client.py` is the same client as a command line.
 
-## Still to build
+## Also here
 
-- Function-call keys for the agents (only the three vault methods).
-- NEAR Intents 1-Click dry-run quote for funding the Hyperliquid balance.
-- NEAR AI Cloud inference with its attestation in the decision record.
+- `restrict_agent_keys.sh`: swaps an agent's full-access key for a function-call
+  key limited to the three vault methods. Done on testnet for both agents; see
+  `evidence/agent_keys.json`.
+- `intents.py`: NEAR Intents 1-Click dry-run quote for funding the Hyperliquid balance.
+- `private_ai.py`: NEAR AI Cloud risk note, with the enclave's signature checked.
+- `judge.py`: re-checks the recorded evidence with no keys (`--live` also reads testnet).

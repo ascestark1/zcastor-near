@@ -11,6 +11,13 @@
 # be undone: after it the account can never deploy code, move NEAR or add keys.
 # Run a permit request between the two steps and check it still works.
 #
+# The near CLI signs with ~/.near-credentials/<network>/<account>.json, and
+# keeps a second copy of every key in a folder of the same name. To test the
+# narrow key on its own before `drop`, back up both copies of the full-access
+# key, copy the new key's file over <account>.json, and request a permit: the
+# "signed successfully" line must show the new key. After `drop`, leave the
+# narrow key as <account>.json.
+#
 # sign_anchor attaches no deposit (the vault pays the signer's 1 yocto), so a
 # function-call key, which can't attach deposits, is enough for all three.
 set -euo pipefail

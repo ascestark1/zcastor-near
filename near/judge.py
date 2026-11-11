@@ -24,7 +24,8 @@ What is checked:
     locally, fills a trade the rules allow and records a refusal for one they
     don't, without placing an order.
  5. (--live) The vault on testnet holds the limits and the decision history
-    that near/evidence/deployment.json describes.
+    that near/evidence/deployment.json describes, and neither agent account
+    holds a full-access key.
 
 The local rules in step 4 mirror `refusal_reason` in near/vault/src/lib.rs so
 the engine can be exercised offline. The contract is the authority; its own 28
@@ -193,18 +194,44 @@ def near_view(account: str, method: str, args: dict):
     raise last
 
 
-def _view(rpc: str, account: str, method: str, args: dict):
-    body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "query", "params": {
-        "request_type": "call_function", "finality": "final", "account_id": account,
-        "method_name": method,
-        "args_base64": base64.b64encode(json.dumps(args).encode()).decode()}}).encode()
+def _query(rpc: str, params: dict) -> dict:
+    body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "query",
+                       "params": dict(params, finality="final")}).encode()
     req = urllib.request.Request(rpc, data=body, headers={
         "Content-Type": "application/json", "User-Agent": "zcastor-near-judge"})
     with urllib.request.urlopen(req, timeout=20) as resp:
         out = json.loads(resp.read())
     if "error" in out or "error" in out.get("result", {}):
         raise RuntimeError(str(out.get("error") or out["result"]["error"])[:200])
-    return json.loads(bytes(out["result"]["result"]).decode())
+    return out["result"]
+
+
+def _view(rpc: str, account: str, method: str, args: dict):
+    out = _query(rpc, {"request_type": "call_function", "account_id": account,
+                       "method_name": method,
+                       "args_base64": base64.b64encode(json.dumps(args).encode()).decode()})
+    return json.loads(bytes(out["result"]).decode())
+
+
+def near_keys(account: str) -> list:
+    """Every access key on an account, as (public key, permission)."""
+    last: Exception = RuntimeError("no RPC configured")
+    for rpc in RPCS:
+        try:
+            out = _query(rpc, {"request_type": "view_access_key_list", "account_id": account})
+            return [(k["public_key"], k["access_key"]["permission"]) for k in out["keys"]]
+        except Exception as exc:  # noqa: BLE001
+            last = RuntimeError(f"{rpc}: {exc}")
+    raise last
+
+
+def narrow(permission, vault: str) -> bool:
+    """True for a function-call key limited to the vault's three agent methods."""
+    if not isinstance(permission, dict):
+        return False                      # "FullAccess"
+    fc = permission.get("FunctionCall") or {}
+    return (fc.get("receiver_id") == vault and bool(fc.get("method_names"))
+            and set(fc["method_names"]) <= {"request_permit", "settle", "sign_anchor"})
 
 
 def step_live() -> None:
@@ -234,6 +261,15 @@ def step_live() -> None:
           f"{status['refused']} refused")
     check("the signer's allowlist is the two anchoring calls",
           sorted(selectors) == ["64d25295", "97b40c25"], ", ".join(selectors))
+    try:
+        keys = {a: near_keys(a) for a in dep["agents"].values()}
+    except Exception as exc:  # noqa: BLE001
+        check("the agents' keys could be read", False, str(exc))
+        return
+    check("no agent holds a full-access key; each can only call the vault",
+          all(ks and all(narrow(perm, dep["vault"]) for _, perm in ks) for ks in keys.values()),
+          "; ".join(f"{a.split('.')[0]}: {len(ks)} key, request_permit/settle/sign_anchor only"
+                    for a, ks in keys.items()))
 
 
 def main(argv: list[str]) -> int:

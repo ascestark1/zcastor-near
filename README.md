@@ -24,7 +24,7 @@ limits and its keys, onto NEAR.
 | Can the agent trade more than I allow? | No. Every trade needs a permit from a contract that holds my limits. No permit, no order. |
 | Can the agent change those limits? | No. Only the owner's account can. |
 | What if it starts losing badly? | The contract halts the whole desk when equity falls past a line I set. Only I can restart it. |
-| Can a hacked agent move money? | No. The agent has no key. NEAR's signing network signs for it, and my contract only allows one kind of transaction: writing a record. |
+| Can a hacked agent move money? | No. The agent has no signing key for other chains: NEAR's signing network signs for it, and my contract only allows one kind of transaction, writing a record. On NEAR itself, the agent's key can make three calls to the vault and nothing else. |
 | How do I know any of this is true? | Every permit and every refusal is on chain with its reason. You can check it without asking me. |
 | Do I have to reveal my strategy? | No. The strategy stays private. The limits and the track record are public. |
 
@@ -52,19 +52,24 @@ All on 11 November 2026, on NEAR testnet. Transaction ids are in `near/evidence/
 - **Funding was priced through NEAR Intents.** 5 USDC on NEAR becomes 4.68 USDC
   in the agent's Hyperliquid balance in about 30 seconds. This was a dry-run
   quote; no funds moved.
+- **The agents' own NEAR keys were cut down to three calls.** Each agent
+  account's full-access key was deleted. What is left can only ask the vault for
+  a permit, settle one, or request an anchor signature. An attempt to send
+  0.01 NEAR from each agent failed: "Transaction requires a full permission
+  access key." (`near/evidence/agent_keys.json`)
 - **A private second opinion was checked, not trusted.** NEAR AI Cloud returned a
   risk note from inside a secure enclave. The enclave's signature matched the
   exact request and response.
 
 You can re-check all of it in under a minute with no account and no key: see
-[Try it](#try-it). It should end with `13 of 13 checks passed`.
+[Try it](#try-it). It should end with `14 of 14 checks passed`.
 
 ## How NEAR is used
 
 | NEAR feature | What it does in this project | Code | Evidence |
 |---|---|---|---|
 | Smart contract | Trade permits, per-agent and desk risk budgets, dead-man halt, decision history, agent win/loss record | `near/vault/src/lib.rs` | `near/evidence/deployment.json` |
-| Sub-accounts | One account per agent (`btc.zcastor-desk.testnet`), plus a reporter, under the owner | `near/deploy_testnet.sh` | same |
+| Sub-accounts and function-call keys | One account per agent (`btc.zcastor-desk.testnet`), plus a reporter, under the owner. Each agent's only key can call three vault methods | `near/deploy_testnet.sh`, `near/restrict_agent_keys.sh` | `agent_keys.json` |
 | Chain Signatures | Signs NVNM anchoring transactions with a key derived from the vault's account and the agent's id; the vault allowlists what can be signed | `sign_anchor` in the contract, `near/vault_client.py` | `chain_signature.json`, `nvnm_anchors.json` |
 | NEAR Intents (1-Click) | Prices the funding route: USDC on NEAR into an agent's Hyperliquid perps balance | `near/intents.py` | `intents_quote.json` |
 | NEAR AI Cloud (TEE) | A private risk note on a decision; the enclave's signature over the exact request and response is checked | `near/private_ai.py` | `private_inference.json` |
@@ -105,10 +110,11 @@ rules (`an_agent_cannot_raise_its_own_limits`, `it_will_not_sign_a_token_transfe
 ```bash
 .venv/bin/python near/judge.py --live
 ```
-See: `13 of 13 checks passed`. The four extra checks read
+See: `14 of 14 checks passed`. The five extra checks read
 `vault.zcastor-desk.testnet` through a public NEAR RPC: its owner, its limits,
-decision 0 (granted) and decision 1 (refused, `over_trade_risk`), and the
-signer's two-entry allowlist. Or look yourself:
+decision 0 (granted) and decision 1 (refused, `over_trade_risk`), the
+signer's two-entry allowlist, and that neither agent account holds a
+full-access key. Or look yourself:
 <https://testnet.nearblocks.io/address/vault.zcastor-desk.testnet>
 
 **5. The Python tests**
@@ -180,10 +186,6 @@ verify it stays inside its limits, without access to its alpha.
   enclave's signature and that its signer is in the attestation report; it does
   not verify the Intel quote inside that report. Use
   [nearai-cloud-verifier](https://github.com/nearai/nearai-cloud-verifier).
-- **Agent accounts still hold full-access keys.** The vault rejects any caller
-  that isn't a registered agent and any call outside its three agent methods,
-  but the accounts' own keys are not yet narrowed to function-call keys.
-  `near/restrict_agent_keys.sh` does it in two steps.
 - **A permit costs a NEAR transaction**, a few seconds before each fill.
 - **The engine trades one market (BTC) per process.** Signals for other markets
   are refused until per-market state is added.
