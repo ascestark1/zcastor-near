@@ -1,0 +1,7 @@
+# The same packages as live Zcastor. setup.sh pins them to the live venv's
+# exact versions (read with pip freeze; the live venv is never written to).
+# universe/ and ops/check_isolation.py need none of these: standard library only.
+fastapi
+uvicorn
+web3
+eth-account

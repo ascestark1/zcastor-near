@@ -1,0 +1,221 @@
+{
+  "policy_version": "demo-1",
+  "dashboard_version": "16.1-desk.1",
+  "min_confidence": "high",
+  "allowed_directions": [
+    "UP",
+    "DOWN"
+  ],
+  "stale_tick_seconds": 120,
+  "spread_hard_block_pts": 75,
+  "deadman_floor_frac": 0.75,
+  "max_position_stack": 5,
+  "blocked_sessions": [
+    "NY Close"
+  ],
+  "ranging_allowed_timeframes": [
+    "1h",
+    "15m"
+  ],
+  "ranging_weak_block_confidences": [
+    "low",
+    "none",
+    "flat",
+    "med"
+  ],
+  "london_window_utc": [
+    6,
+    11
+  ],
+  "london_min_down_pts": 60.0,
+  "london_spread_multiple": 2.0,
+  "spread_target_ratio_max": 0.3,
+  "min_risk_reward": 1.0,
+  "range_adequacy_multiple": 1.0,
+  "session_typical_range_pts": {
+    "Asian": 500,
+    "Pre-London": 250,
+    "London": 1250,
+    "NY Open": 1100,
+    "NY PM": 1000,
+    "NY Close": 500,
+    "Overnight": 400
+  },
+  "session_exhaustion_frac": 0.5,
+  "ledger_enforce": false,
+  "max_trade_risk_frac": 0.3,
+  "margin_buffer_frac": 0.95,
+  "targets": {
+    "min_risk_reward": 1.5,
+    "tf_sl_range_pts": {
+      "5m": [
+        500,
+        600
+      ],
+      "15m": [
+        500,
+        750
+      ],
+      "30m": [
+        550,
+        900
+      ],
+      "1h": [
+        600,
+        1100
+      ],
+      "4h": [
+        900,
+        1750
+      ]
+    },
+    "tf_tp_ceiling_pts": {
+      "5m": 1100,
+      "15m": 1500,
+      "30m": 1900,
+      "1h": 2750,
+      "4h": 5000
+    },
+    "phase_fraction": {
+      "fresh": 0.8,
+      "active": 0.6,
+      "exhausting": 0.4
+    },
+    "session_rr": {
+      "London": 1.5,
+      "NY Open": 1.5,
+      "Asian": 1.5,
+      "Pre-London": 1.5,
+      "NY PM": 1.5,
+      "NY Close": 1.5,
+      "Overnight": 1.5,
+      "CME Gap": 1.5
+    },
+    "regime_atr_bias": {
+      "trending": 1.0,
+      "volatile": 1.0,
+      "ranging": 1.0,
+      "unknown": 1.0
+    },
+    "regime_rr_cap": {
+      "ranging": 1.5,
+      "volatile": 1.5
+    },
+    "regime_rr_cap_timeframes": [
+      "5m",
+      "15m"
+    ],
+    "sr_buffer_pts": 20,
+    "phase_blend": 0.5,
+    "sr_blend": 0.5,
+    "atr_half_weight": 0.5,
+    "min_stop_pts": 500,
+    "max_spread_fraction_of_stop": 0.1
+  },
+  "zones": {
+    "zone_size_pts": 400,
+    "window_seconds": 3600,
+    "fast_window_seconds": 900,
+    "caution_entries": 3,
+    "block_entries": 5,
+    "fast_compress_entries": 4,
+    "weak_bounce_pts": 60,
+    "tf_hierarchy": [
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "4h"
+    ],
+    "tf_suppresses": {
+      "5m": [
+        "5m"
+      ],
+      "15m": [
+        "15m",
+        "5m"
+      ],
+      "30m": [
+        "30m",
+        "15m",
+        "5m"
+      ],
+      "1h": [
+        "1h",
+        "30m",
+        "15m",
+        "5m"
+      ],
+      "4h": [
+        "4h",
+        "1h",
+        "30m",
+        "15m",
+        "5m"
+      ]
+    }
+  },
+  "coherence": {
+    "window": 12,
+    "min_win_rate": 0.5,
+    "min_samples": 5
+  },
+  "ledger": {
+    "window_days": 30,
+    "promote_n": 30,
+    "demote_window": 15,
+    "z": 1.96
+  },
+  "watcher": {
+    "confirm_pts": 50.0,
+    "invalidate_pts": 75.0,
+    "zone_touch_pts": 30.0,
+    "stop_buffer_pts": 750,
+    "expiry_min_by_tf": {
+      "5m": 120,
+      "15m": 240,
+      "30m": 360,
+      "1h": 600,
+      "4h": 1200
+    },
+    "expiry_min_default": 240,
+    "poll_seconds": 5,
+    "max_hold_hours": 24,
+    "day_boundary_close": true,
+    "max_stop_pts": 1750,
+    "tp_r": 1.5,
+    "zone_min_pts": 100.0,
+    "zone_max_pts": 500,
+    "target_pts": 500,
+    "hourly_levels": {
+      "enabled": true,
+      "lookback_hours": 168,
+      "swing_k": 3,
+      "refresh_seconds": 900
+    }
+  },
+  "resolver": {
+    "horizon_min_by_tf": {
+      "5m": 240,
+      "15m": 480,
+      "30m": 720,
+      "1h": 1440,
+      "4h": 2880
+    },
+    "horizon_min_default": 480,
+    "default_spread_pts": 60.0,
+    "default_rr": 1.5,
+    "poll_seconds": 60,
+    "give_up_hours": 120
+  },
+  "policy_notes": "DEMO POLICY. The desk's tuned values are private. Every tuned number here is a round placeholder so the engine, the gates and the vault can be run and read. Do not trade on it.",
+  "entry_cooldown_seconds": 600,
+  "entry_cooldown_distance_pts": 500,
+  "commission_rate": 0.0,
+  "structural_level_max_pts": 500,
+  "structural_level_enforce": false,
+  "notify_events": [
+    "fill",
+    "close"
+  ]
+}
