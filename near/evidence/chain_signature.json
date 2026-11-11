@@ -1,0 +1,27 @@
+{
+  "what": "The first signature NEAR Chain Signatures returned for the BTC agent, 11 Nov 2026. The vault built the transaction and asked v1.signer-prod.testnet to sign its hash with path = the agent's account id. Never broadcast; it is the reference for verifying the scheme offline.",
+  "near_tx": "HNVfjsW5E5Xey4Lqb1mgtpw5iEaRf5noKR3HCzYhs5jw",
+  "agent": "btc.zcastor-desk.testnet",
+  "request": {
+    "chain_id": 787223,
+    "nonce": 0,
+    "max_priority_fee_wei": "1000000000",
+    "max_fee_wei": "2000000000",
+    "gas_limit": 400000,
+    "to": "0x0000000000000000000000000000000000000A00",
+    "value": 0,
+    "data_hex": "0x64d2529500000000"
+  },
+  "hash_logged_by_vault": "a68896622b1624f5176146257aafb650e5a19892011ca3153b01398167ac5624",
+  "mpc_response": {
+    "big_r": {
+      "affine_point": "02c29fc756a6fd74e44d9b2088f3c2d0f1b06547bb0cc24a017a53e9d579f48f11"
+    },
+    "recovery_id": 0,
+    "s": {
+      "scalar": "2febc86edfd18b3e6f559c5cb2d8b5dfe7b76e1343df5c6a0b9dec0600cfbba5"
+    },
+    "scheme": "Secp256k1"
+  },
+  "agent_evm_address": "0x49A6bdc6b5ef4B80d1e5BF6eE86F933623022096"
+}

@@ -101,6 +101,9 @@ class Engine:
         # included — see notify/discord.py for why the refusals matter.
         self.on_decision_notify = None
         self.dossier_uri_template = dossier_uri_template
+        # Set by the app when origin capture is on (record/capture.py). Keeps
+        # the inputs of every decision so it can be replayed. Never decides.
+        self.capture = None
 
     # ── entry point ───────────────────────────────────────────────────────────
 
@@ -115,18 +118,31 @@ class Engine:
 
         self.market.begin()
 
+        adapters = {"market": self.market, "risk": self.risk,
+                    "positions": self.positions, "ledger": self.ledger}
+        cap = None
+        if self.capture is not None:
+            cap = self.capture.begin(payload=payload, signal_id=signal_id,
+                                     origin_hash=origin.origin_hash,
+                                     received_at=received_at, adapters=adapters)
+            if cap is not None:
+                adapters = {k: cap.wrap(k, v) for k, v in adapters.items()}
+
         ctx = GateContext(
             signal=dict(payload),
             origin_hash=origin.origin_hash,
             policy=self.policy,
-            market=self.market,
-            risk=self.risk,
-            positions=self.positions,
-            ledger=self.ledger,
+            market=adapters["market"],
+            risk=adapters["risk"],
+            positions=adapters["positions"],
+            ledger=adapters["ledger"],
             targets=self.targets,
         )
 
         trace = self.pipeline.run(ctx, signal_id, self.policy_hash)
+        if self.capture is not None:
+            # Before the engine acts: replay judges the pipeline, not the venue.
+            self.capture.finish(cap, trace, ctx.derived)
 
         if trace.action is Verdict.REJECT:
             # Unusable input. Nothing to be accountable for, so no record.
@@ -175,6 +191,10 @@ class Engine:
 
     def _execute(self, ctx: GateContext, trace: DecisionTrace) -> Optional[dict]:
         side = "BUY" if ctx.need("is_buy") else "SELL"
+        # Vaulted orders (execution/vaulted.py) name the signal on chain.
+        bind = getattr(self.orders, "bind_signal", None)
+        if bind:
+            bind(trace.signal_id, ctx.origin_hash)
         result = self.orders.market_order(
             side=side,
             price=ctx.need("execution_price"),
@@ -185,6 +205,12 @@ class Engine:
         if "error" in result:
             # The decision stands and is recorded; only the fill failed.
             trace.action = Verdict.SUPPRESS
+            if result.get("refused"):
+                # The gates allowed it; the vault on NEAR did not. That is a
+                # decision with a reason, not a failure.
+                trace.reason = f"vault_refused:{result['refused']}"
+                logger.info("%s %s", trace.signal_id, trace.reason)
+                return {"error": result["error"], "refused": result["refused"]}
             trace.reason = "order_failed"
             logger.error("%s order failed: %s", trace.signal_id, result["error"])
             return {"error": result["error"]}

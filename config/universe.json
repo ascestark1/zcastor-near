@@ -1,0 +1,25 @@
+{
+  "_status": "DEFAULTS, NOT DECIDED. Hyperliquid volumes are smaller than Binance's, so the floors are lower; check the list `select` prints.",
+  "_note": "Which Hyperliquid perps the desk analyses. Every universe document records this rule and its checksum.",
+  "quote_asset": "USDC",
+  "contract_type": "PERPETUAL",
+  "underlying_types": [
+    "COIN"
+  ],
+  "top_n": 30,
+  "min_quote_volume_24h_usd": 20000000,
+  "min_open_interest_usd": 10000000,
+  "min_listing_age_days": 90,
+  "rank_by": [
+    "quote_volume_24h",
+    "open_interest_usd"
+  ],
+  "always_include": [
+    "BTC"
+  ],
+  "exclude": [],
+  "refresh": "weekly",
+  "btc_point_value_usd": 1.0,
+  "venue": "hyperliquid",
+  "_listing_age_note": "Hyperliquid publishes no listing date, so min_listing_age_days cannot be applied; a perp with too little history shows up as 'short' in history and is left out of profiles."
+}

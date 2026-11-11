@@ -1,0 +1,13 @@
+{
+  "what": "Dry-run 1-Click quote, 11 Nov 2026 10:46 UTC, as near/intents.py summarised it. Nothing moved.",
+  "route": "USDC on NEAR -> Hyperliquid perps balance, via NEAR Intents 1-Click",
+  "dry_run": true,
+  "send": "5.0",
+  "receive": "4.68369",
+  "minimum_received": "4.633753",
+  "estimated_seconds": 30,
+  "recipient": "0x49A6bdc6b5ef4B80d1e5BF6eE86F933623022096",
+  "flat_fee_usdc": 0.2,
+  "authenticated": false,
+  "caveat": "The recipient is the agent's TESTNET-derived address. A real transfer must use the address derived on mainnet (v1.signer), which differs."
+}

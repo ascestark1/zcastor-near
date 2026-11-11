@@ -1,0 +1,31 @@
+{
+  "what": "One risk note from NEAR AI Cloud, 11 Nov 2026, exactly as near/private_ai.py saved it.",
+  "model": "Qwen/Qwen3.8-27B",
+  "chat_id": "12d65396e2cf4ccf981f76e4b27d2293",
+  "sent": {
+    "symbol": "BTC",
+    "direction": "DOWN",
+    "timeframe": "15m",
+    "session": "London",
+    "regime": "trending",
+    "confidence": "high"
+  },
+  "answer": {
+    "risk": "low",
+    "note": "High confidence in a trending regime supports the directional bias; London liquidity is adequate. 15m BTC remains short-term noisy, so keep stops tight."
+  },
+  "finish_reason": "stop",
+  "request_sha256": "2f8270504376584e133189091ae04a4117f5cdbe0b6f1aa9b4553a5db744547e",
+  "response_sha256": "5862fa66f9ec7e50c3244b3b6f7609494dbaaecfd52e215012d5b0ba7833f750",
+  "verification": {
+    "signed_text": "Qwen/Qwen3.8-27B:2f8270504376584e133189091ae04a4117f5cdbe0b6f1aa9b4553a5db744547e:5862fa66f9ec7e50c3244b3b6f7609494dbaaecfd52e215012d5b0ba7833f750",
+    "signature": "0xaf5b70f309ed5a029ccaa95f26f26bd29cf521fb9681a01d486c14fa2b2560f1256973711f1c669c0524e0c36ec266766c3d06a2194c0c9e5e65f0a054cd76d51c",
+    "signing_address": "0x835ab53d20294ef795906dff21ae4c045336aa26",
+    "signing_algo": "ecdsa",
+    "attestation_sha256": "3f25ac67d38b909594e46a6fa4ccb9a1aa67020297f896fc1cf5d6e77de50bf4",
+    "attestation_nonce": "ed054e485404673c9a28a64b467d66baf6188b419ee2e43215d629bf7cb84126",
+    "attestation_has_intel_quote": true,
+    "signer_in_attestation": true,
+    "tdx_quote_verified": "not checked here; see nearai-cloud-verifier"
+  }
+}

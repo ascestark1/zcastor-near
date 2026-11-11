@@ -1,0 +1,25 @@
+{
+  "chain": "NVNM L1 testnet",
+  "chain_id": 787223,
+  "explorer": "https://explorer.nvnm.testnet.nvnmchain.io",
+  "sender": "0x49A6bdc6b5ef4B80d1e5BF6eE86F933623022096",
+  "note": "Both transactions were built by the vault, signed by NEAR Chain Signatures and broadcast by near/vault_client.py. No private key for the sender exists.",
+  "registry": {
+    "tx": "0x5416c4f579389b2b90425f2ddd635c5045975a51985272abf820c8049e3693f5",
+    "block": 7135381,
+    "registry_id": 2675,
+    "name": "zcastor-desk-btc",
+    "gas_used": 3094959
+  },
+  "record": {
+    "tx": "0xb50f5c373617b77e331c09baf235defaf22718f19a9499c50e6c37ded5b8bdcf",
+    "block": 7135606,
+    "registry_id": 2675,
+    "record_id": 1,
+    "index": 1,
+    "gas_used": 4093274,
+    "checksum_sha256": "ad576905af0ce1bd54e1ffe7071d11c43192f8314d88999d032318024ca44632",
+    "checksum_of": "the deployed vault wasm (near/vault, cargo near build)",
+    "uri": "https://testnet.nearblocks.io/address/vault.zcastor-desk.testnet"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "network": "NEAR testnet",
+  "date": "2026-11-11",
+  "vault": "vault.zcastor-desk.testnet",
+  "owner": "zcastor-desk.testnet",
+  "reporter": "reporter.zcastor-desk.testnet",
+  "agents": {
+    "BTC": "btc.zcastor-desk.testnet",
+    "ETH": "eth.zcastor-desk.testnet"
+  },
+  "mpc_contract": "v1.signer-prod.testnet",
+  "wasm_sha256": "ad576905af0ce1bd54e1ffe7071d11c43192f8314d88999d032318024ca44632",
+  "deploy_tx": "FbkTCk81reg7G8wj3QFC95NEkLf2KdV6xXoVaBP1MBrF",
+  "explorer": "https://testnet.nearblocks.io/address/vault.zcastor-desk.testnet",
+  "transactions": {
+    "permit_granted_btc_id0": "92oscdVBcLc6Rpy5VqTZxZiEWmoQk5XEhSAW5Cid32kN",
+    "permit_refused_btc_id1_over_trade_risk": "FfkCSxBMDEr3beSh7jHJ2kkSL58WTxMkbfA7mynJ59s4",
+    "sign_anchor_first_signature": "HNVfjsW5E5Xey4Lqb1mgtpw5iEaRf5noKR3HCzYhs5jw",
+    "sign_anchor_refused_token_transfer": "2F4nRZd3XR4zqk9wFWbLZB7cv6A389RUsNYZxQyyhAjE",
+    "owner_resume_after_dead_man_halt": "GRooRvCxfb5EU9bSn1ZWMuv8Ss2HJKYp9pUfomLFLWWr"
+  }
+}

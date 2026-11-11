@@ -29,6 +29,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from ..anchor.base import NullBackend
@@ -40,29 +41,15 @@ from ..execution.booking import Booker, ClosePoller
 from ..execution.engine import Engine
 from ..entry.watcher import EntryWatcher
 from ..execution.orders import OrderPlacer
-from ..gates.coherence import ModelCoherenceGate, SignalCoherenceGate
-from ..gates.confidence import ConfidenceGate
 from ..gates.cooldown import EntryCooldownGate
-from ..gates.structural import StructuralLevelGate
+from ..gates.assembly import build_gates
+from ..record.capture import OriginCapture
 from .venue import resolve_venue
 from .anchor_guard import check_anchor_config
 from . import lock as engine_lock
 from ..record.repo_sync import RepoSync
-from ..gates.deadman import DeadmanGate
-from ..gates.direction import DirectionGate
-from ..gates.exhaustion import SessionExhaustionGate
 from ..gates.feed import FeedGate
-from ..gates.ledger import EdgeLedgerGate
-from ..gates.london import LondonBiasGate
 from ..gates.pipeline import GatePipeline
-from ..gates.range import RangeAdequacyGate, RiskRewardGate
-from ..gates.regime import RegimeContextGate
-from ..gates.session import SessionGate
-from ..gates.spread import SpreadHardGate, SpreadViabilityGate
-from ..gates.stack import StackLimitGate
-from ..gates.targets import TargetStage
-from ..gates.viability import ViabilityGate
-from ..gates.zone import FlipConfirmGate, ZoneGate
 from ..market.mt5 import MarketData, connect
 from ..market.levels import HourlyLevels
 from ..market.session import SessionOpens, current_session
@@ -151,21 +138,37 @@ class Zcastor:
         sessions = SessionOpens(lambda f, t: self.market.get_rates_range(f, t))
 
         # One port, two venues. Nothing below this line knows which.
-        if venue == "binance":
-            from ..execution.binance_orders import BinanceOrderPlacer
-            from ..market.binance import (MAINNET, TESTNET, BinanceClient,
-                                          BinanceMarketData)
-            testnet = os.environ.get("BINANCE_TESTNET", "true").lower() != "false"
-            symbol = self.runtime.get("binance_symbol", "BTCUSDT")
-            volume = float(self.runtime.get("binance_volume", 0.001))
-            client = BinanceClient(base_url=TESTNET if testnet else MAINNET)
-            self.market = BinanceMarketData(client, symbol=symbol,
-                                            volume=volume, journal=self.journal,
-                                            session_opens=sessions)
-            self.orders = BinanceOrderPlacer(client, symbol=symbol,
-                                             volume=volume)
-            logger.info("venue: Binance %s, %s",
-                        "testnet" if testnet else "LIVE", symbol)
+        if venue == "hyperliquid-paper":
+            # Hyperliquid's real order book, simulated fills (market/hl_paper.py).
+            # No exchange key exists on this box until NEAR issues one.
+            from ..market.hl_paper import (HyperliquidMarketData, PaperBook,
+                                           PaperOrderPlacer)
+            from ..market.hyperliquid import HLInfo, api_base, urllib_transport
+            testnet = os.environ.get("HYPERLIQUID_TESTNET", "false").lower() == "true"
+            symbol = str(self.runtime.get("coin", "BTC"))
+            volume = float(self.runtime.get("paper_volume", 0.001))
+            info = HLInfo(urllib_transport(api_base(testnet)),
+                          weight_budget=int(self.runtime.get("weight_budget", 300)))
+            book = PaperBook(DATA / "paper_book.jsonl",
+                             start_balance=float(self.runtime.get("paper_balance", 10_000)))
+            self.market = HyperliquidMarketData(
+                info, book, coin=symbol, volume=volume,
+                leverage=float(self.runtime.get("paper_leverage", 3)),
+                session_opens=sessions)
+            szd = None
+            try:
+                specs, _ = info.meta_and_ctxs()
+                szd = next((int(s["szDecimals"]) for s in specs
+                            if s.get("name") == symbol), None)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("could not read %s size rules: %s", symbol, exc)
+            self.orders = PaperOrderPlacer(self.market, volume=volume,
+                                           sz_decimals=szd)
+            # One engine trades one coin until per-ticker state exists. Signals
+            # for any other perp are refused at the door (see /signal).
+            self.traded_symbol = symbol
+            logger.info("venue: Hyperliquid order book at %s, PAPER fills, %s",
+                        api_base(testnet), symbol)
         else:
             mt5 = connect()
             self.market = MarketData(mt5, symbol=symbol, volume=volume,
@@ -173,6 +176,25 @@ class Zcastor:
             self.orders = OrderPlacer(mt5, symbol=symbol, volume=volume,
                                       magic=int(self.runtime.get("magic", 777001)))
             logger.info("venue: MT5, %s", symbol)
+
+        # The vault on NEAR (near/vault): every order needs its permit first.
+        # Off unless runtime.json says "vault": {"enabled": true}.
+        self.vault = None
+        vcfg = dict(self.runtime.get("vault") or {})
+        if vcfg.get("enabled"):
+            import sys
+            sys.path.insert(0, str(ROOT / "near"))
+            from vault_client import Vault
+            from ..execution.vaulted import VaultedOrders
+            self.vault = Vault()
+            agent = str(vcfg.get("agent") or symbol.lower())
+            self.orders = VaultedOrders(
+                self.orders, self.vault, agent=agent,
+                leverage=float(self.runtime.get("paper_leverage", 1)),
+                store=DATA / "near" / "permits.json")
+            self.vault_report_seconds = int(vcfg.get("report_seconds", 300))
+            logger.info("vault: %s, agent %s; every order needs a permit",
+                        self.vault.vault, self.vault.account(agent))
         self.ledger = EdgeLedger(self.policy, DATA / "edge_ledger.jsonl",
                                  policy_hash=self.policy_hash)
         self.zones = ZoneTracker(self.policy)
@@ -277,6 +299,8 @@ class Zcastor:
 
         # Held on the instance so the engine can report fills to it.
         self.cooldown = EntryCooldownGate()
+        # Held so origin capture can snapshot its staleness state.
+        self.feed_gate = FeedGate()
 
         self.booker = Booker(market=self.market, journal=self.journal,
                              ledger=self.ledger,
@@ -320,6 +344,23 @@ class Zcastor:
             cooldown=self.cooldown,
         )
         self.engine.watcher = self.watcher
+
+        # Origin capture (record/capture.py): keeps each decision's inputs in
+        # data/origins/ so replay can re-decide it. On only when runtime.json
+        # says "capture_origins": true, so an engine that never asked for it
+        # behaves exactly as before.
+        if self.runtime.get("capture_origins", False):
+            self.engine.capture = OriginCapture(
+                DATA / "origins", policy=self.policy,
+                policy_hash=self.policy_hash, symbol=symbol, venue=self.venue,
+                components=lambda: {
+                    "zones": self.zones,
+                    "signal_coherence": self.risk._signal,
+                    "cooldown": self.cooldown,
+                    "feed": self.feed_gate,
+                    "levels": self.levels,
+                })
+            logger.info("origin capture on: %s", DATA / "origins")
 
         # Two callbacks that close the record lifecycle: remember what landed,
         # then move it to resolved once price has spoken.
@@ -384,24 +425,16 @@ class Zcastor:
         self.discord.filled(**kw)
 
     def _notify_closed(self, trade: dict) -> None:
+        if self.vault is not None:
+            # Frees the trade's risk on chain and scores the agent.
+            self.orders.on_closed(trade)
         self.feed.closed(trade)
         self.discord.closed(trade)
 
     def _gates(self) -> list:
-        return [
-            DirectionGate(), ConfidenceGate(), FeedGate(), SpreadHardGate(),
-            DeadmanGate(), StackLimitGate(), self.cooldown,
-            ZoneGate(), FlipConfirmGate(), SignalCoherenceGate(),
-            ModelCoherenceGate(), SessionGate(), RegimeContextGate(),
-            LondonBiasGate(),
-            TargetStage(),
-            SpreadViabilityGate(), StructuralLevelGate(self.levels, enforce=bool(
-                self.policy.get('structural_level_enforce', False))),
-            RangeAdequacyGate(), RiskRewardGate(),
-            SessionExhaustionGate(),
-            EdgeLedgerGate(enforce=bool(self.policy.get("ledger_enforce"))),
-            ViabilityGate(),
-        ]
+        # Built in gates/assembly.py so the replay harness runs the same stack.
+        return build_gates(self.policy, levels=self.levels,
+                           cooldown=self.cooldown, feed=self.feed_gate)
 
 
 class _Positions:
@@ -425,6 +458,8 @@ async def lifespan(app: FastAPI):
              asyncio.create_task(_roll_sessions(app.state.z)),
              asyncio.create_task(_poll_watcher(app.state.z)),
              asyncio.create_task(_resolve_outcomes(app.state.z))]
+    if app.state.z.vault is not None:
+        tasks.append(asyncio.create_task(_report_to_vault(app.state.z)))
     try:
         yield
     finally:
@@ -457,6 +492,27 @@ async def _poll_closes(z: Zcastor, interval: int = 20) -> None:
             await asyncio.to_thread(z.poller.poll)
         except Exception:  # noqa: BLE001
             logger.exception("close poller cycle failed")
+
+
+async def _report_to_vault(z: Zcastor) -> None:
+    """
+    Post the desk's equity to the vault, which halts the desk on chain if it has
+    fallen past the owner's drawdown limit. Also settles any permit whose trade
+    closed while the vault could not be reached.
+    """
+    while True:
+        try:
+            equity = await asyncio.to_thread(z.market.get_equity)
+            if equity is not None:
+                halted = await asyncio.to_thread(
+                    z.vault.report_equity, int(round(float(equity) * 100)))
+                if halted:
+                    logger.warning("the vault has HALTED the desk; every order "
+                                   "will be refused until the owner resumes it")
+            await asyncio.to_thread(z.orders.retry_settlements, z.journal)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("vault report failed: %s", exc)
+        await asyncio.sleep(z.vault_report_seconds)
 
 
 async def _drain_outbox(z: Zcastor, interval: int = 30) -> None:
@@ -528,6 +584,14 @@ app.add_middleware(
 async def signal(request: Request):
     payload = await request.json()
     z: Zcastor = request.app.state.z
+    # The desk runs one dashboard per perp but, for now, one single-coin engine.
+    # A signal for another coin must never be decided against this coin's price.
+    traded = getattr(z, "traded_symbol", None)
+    sent = str(payload.get("symbol", "")) if isinstance(payload, dict) else ""
+    if traded and sent and sent != traded:
+        return JSONResponse(status_code=409, content={
+            "action": "reject", "reason": "symbol_not_traded",
+            "detail": f"this engine trades {traded}; signal was for {sent}"})
     trace = await asyncio.to_thread(z.engine.process, payload)
     return {
         "signal_id": trace.signal_id,

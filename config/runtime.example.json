@@ -1,0 +1,23 @@
+{
+  "_note": "Desk runtime. setup.sh copies this to runtime.json (gitignored) and makes dossier_root absolute. ops/check_isolation.py refuses to start if anything here points at live Zcastor.",
+  "venue": "hyperliquid-paper",
+  "_venue_note": "Hyperliquid's real order book with simulated fills, until NEAR-issued trade keys exist. Then 'hyperliquid'.",
+  "coin": "BTC",
+  "paper_volume": 0.001,
+  "paper_balance": 10000,
+  "paper_leverage": 3,
+  "symbol": "BTC",
+  "magic": 777101,
+  "dossier_root": "data/dossiers",
+  "dossier_uri_template": "",
+  "dossier_autopush": false,
+  "registry_ids": {},
+  "signal_feed": false,
+  "capture_origins": true,
+  "vault": {
+    "enabled": false,
+    "agent": "btc",
+    "report_seconds": 300
+  },
+  "_vault_note": "When enabled, every order first needs a permit from the vault contract on NEAR (NEAR_VAULT and NEAR_OWNER in .env). See near/README.md."
+}

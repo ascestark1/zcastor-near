@@ -1,0 +1,15 @@
+{
+  "_status": "PLACEHOLDERS, NOT DECIDED. Nothing reads this file yet; the allocator will. Demo money only.",
+  "_note": "The limits the allocator works inside. From 1 Nov the NEAR vault contract enforces the money side of them.",
+  "live_tickers": [
+    "BTC"
+  ],
+  "_live_note": "BTC stays the only live ticker until 31 Dec 2026, and live means the Zcastor engine on MT5, not this desk. Every perp on the desk runs on Hyperliquid paper, then Hyperliquid with NEAR-issued keys.",
+  "total_open_risk_frac": 0.02,
+  "per_trade_risk_frac": 0.005,
+  "max_same_direction_positions": 3,
+  "max_open_positions": 6,
+  "leverage_cap_default": 3,
+  "leverage_cap_by_symbol": {},
+  "margin_mode": "ISOLATED"
+}
