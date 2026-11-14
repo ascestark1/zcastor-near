@@ -282,6 +282,20 @@ def step_live() -> None:
           f"{status['refused']} refused")
     check("the signer's allowlist is the two anchoring calls",
           sorted(selectors) == ["64d25295", "97b40c25"], ", ".join(selectors))
+    rnd = load("swarm_round.json")
+    ids = [b["decision_id"] for b in rnd["bids"]]
+    try:
+        chain = {d["id"]: d for d in near_view(dep["vault"], "list_decisions",
+                                               {"from": min(ids), "limit": len(ids)})}
+    except Exception as exc:  # noqa: BLE001
+        check("the bidding round could be read", False, str(exc))
+        return
+    check("the bidding round is on chain as recorded: four funded, one refused by the desk budget",
+          all(chain.get(b["decision_id"], {}).get("granted") is b["granted"]
+              and chain[b["decision_id"]]["reason"] == b["actual"]
+              and chain[b["decision_id"]]["agent"] == b["agent"] for b in rnd["bids"]),
+          f"decisions {min(ids)} to {max(ids)}; decision {ids[-1]} refused as "
+          f"{chain.get(ids[-1], {}).get('reason')}")
     try:
         keys = {a: near_keys(a) for a in dep["agents"].values()}
     except Exception as exc:  # noqa: BLE001

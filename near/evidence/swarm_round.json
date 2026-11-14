@@ -1,0 +1,101 @@
+{
+  "what": "One allocator round on NEAR testnet. Three agents bid $250 of risk for a $200 desk budget. Bids were sent to the vault in order of score weighted by each agent's on-chain record. The vault granted four and refused the fifth as over_desk_budget. Every outcome matched the allocator's prediction. The four permits were then settled at zero to release the risk.",
+  "date": "2026-11-14",
+  "network": "NEAR testnet",
+  "vault": "vault.zcastor-desk.testnet",
+  "command": "near/allocator.py demo --release",
+  "desk_budget_cents": 20000,
+  "room_before_cents": 20000,
+  "bid_for_cents": 25000,
+  "granted_cents": 20000,
+  "funded_by_agent_cents": {
+    "eth.zcastor-desk.testnet": 10000,
+    "sol.zcastor-desk.testnet": 5000,
+    "btc.zcastor-desk.testnet": 5000
+  },
+  "note": "BTC submitted the highest raw score (0.81) but was ranked fourth: its record in the vault gave it a weight of 0.31, against 0.5 for ETH and SOL.",
+  "all_as_predicted": true,
+  "bids": [
+    {
+      "order": 0,
+      "agent": "eth.zcastor-desk.testnet",
+      "signal_hash": "round-160523-1",
+      "side": "Sell",
+      "notional_cents": 250000,
+      "risk_cents": 5000,
+      "leverage_x10": 10,
+      "score": 0.77,
+      "weighted_score": 0.385,
+      "predicted": "within_limits",
+      "actual": "within_limits",
+      "granted": true,
+      "decision_id": 19
+    },
+    {
+      "order": 1,
+      "agent": "sol.zcastor-desk.testnet",
+      "signal_hash": "round-160523-2",
+      "side": "Buy",
+      "notional_cents": 250000,
+      "risk_cents": 5000,
+      "leverage_x10": 10,
+      "score": 0.74,
+      "weighted_score": 0.37,
+      "predicted": "within_limits",
+      "actual": "within_limits",
+      "granted": true,
+      "decision_id": 20
+    },
+    {
+      "order": 2,
+      "agent": "eth.zcastor-desk.testnet",
+      "signal_hash": "round-160523-4",
+      "side": "Buy",
+      "notional_cents": 250000,
+      "risk_cents": 5000,
+      "leverage_x10": 10,
+      "score": 0.58,
+      "weighted_score": 0.29,
+      "predicted": "within_limits",
+      "actual": "within_limits",
+      "granted": true,
+      "decision_id": 21
+    },
+    {
+      "order": 3,
+      "agent": "btc.zcastor-desk.testnet",
+      "signal_hash": "round-160523-0",
+      "side": "Buy",
+      "notional_cents": 250000,
+      "risk_cents": 5000,
+      "leverage_x10": 10,
+      "score": 0.81,
+      "weighted_score": 0.249231,
+      "predicted": "within_limits",
+      "actual": "within_limits",
+      "granted": true,
+      "decision_id": 22
+    },
+    {
+      "order": 4,
+      "agent": "btc.zcastor-desk.testnet",
+      "signal_hash": "round-160523-3",
+      "side": "Sell",
+      "notional_cents": 250000,
+      "risk_cents": 5000,
+      "leverage_x10": 10,
+      "score": 0.66,
+      "weighted_score": 0.203077,
+      "predicted": "over_desk_budget",
+      "actual": "over_desk_budget",
+      "granted": false,
+      "decision_id": 23
+    }
+  ],
+  "third_agent": {
+    "account": "sol.zcastor-desk.testnet",
+    "create_tx": "56m4tLG8455yBDtqRnDVLuiBa5se91A1TNT6Tb1RjCu5",
+    "register_tx": "9rd2UBmDW4cSYs1fTMs1kA1PLnNjavTUpMipBkS7emxX"
+  },
+  "check_it": "python near/judge.py --live   (reads decisions 19 to 23 from the vault)"
+}

@@ -60,6 +60,13 @@ Baseline files changed in the window:
 near-sdk (Rust), cargo-near, near-cli-rs, FastAPI, web3.py, eth-account.
 AI coding assistance (Claude) was used throughout the window.
 
+## Added on 14 November 2026
+
+`near/allocator.py`, `tests/near/test_allocator.py`, `near/evidence/swarm_round.json`,
+the third agent (`sol.zcastor-desk.testnet`) and two judge-mode steps. Built and
+run on the last day of the window, after the submission form was sent; the form
+itself was not changed.
+
 ## A correction to the `pre-hackathon` tag
 
 `zcastor/data/` (`journal.py`, `ledger.py`, `__init__.py`) is baseline code, but

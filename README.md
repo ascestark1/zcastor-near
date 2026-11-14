@@ -33,7 +33,7 @@ these agents and verify it stays inside its limits, without seeing how it thinks
 
 ## What was proven, on a live network
 
-All on 11 November 2026, on NEAR testnet. Transaction ids are in `near/evidence/`.
+On 11 and 14 November 2026, on NEAR testnet. Transaction ids are in `near/evidence/`.
 
 - **A trade inside the limits was granted; one over them was refused.** A $40-risk
   BTC trade got a permit. A $90-risk one was refused as `over_trade_risk`. Both
@@ -57,19 +57,25 @@ All on 11 November 2026, on NEAR testnet. Transaction ids are in `near/evidence/
   a permit, settle one, or request an anchor signature. An attempt to send
   0.01 NEAR from each agent failed: "Transaction requires a full permission
   access key." (`near/evidence/agent_keys.json`)
+- **Three agents competed for one budget, and the contract picked the winners.**
+  On 14 November, BTC, ETH and SOL agents bid $250 of risk for a $200 desk
+  budget. Four bids were funded and the fifth was refused on chain as
+  `over_desk_budget`. BTC had the highest score but was ranked fourth, because
+  its record in the vault counted against it. Every outcome matched what the
+  allocator predicted. (`near/evidence/swarm_round.json`)
 - **A private second opinion was checked, not trusted.** NEAR AI Cloud returned a
   risk note from inside a secure enclave. The enclave's signature matched the
   exact request and response.
 
 You can re-check all of it in under a minute with no account and no key: see
-[Try it](#try-it). It should end with `14 of 14 checks passed`.
+[Try it](#try-it). It should end with `17 of 17 checks passed`.
 
 ## How NEAR is used
 
 | NEAR feature | What it does in this project | Code | Evidence |
 |---|---|---|---|
-| Smart contract | Trade permits, per-agent and desk risk budgets, dead-man halt, decision history, agent win/loss record | `near/vault/src/lib.rs` | `near/evidence/deployment.json` |
-| Sub-accounts and function-call keys | One account per agent (`btc.zcastor-desk.testnet`), plus a reporter, under the owner. Each agent's only key can call three vault methods | `near/deploy_testnet.sh`, `near/restrict_agent_keys.sh` | `agent_keys.json` |
+| Smart contract | Trade permits, per-agent and desk risk budgets, dead-man halt, decision history, agent win/loss record. The shared desk budget is what agents compete for | `near/vault/src/lib.rs`, `near/allocator.py` | `deployment.json`, `swarm_round.json` |
+| Sub-accounts and function-call keys | One account per agent (`btc.`, `eth.`, `sol.zcastor-desk.testnet`), plus a reporter, under the owner. Each agent's only key can call three vault methods | `near/deploy_testnet.sh`, `near/restrict_agent_keys.sh` | `agent_keys.json` |
 | Chain Signatures | Signs NVNM anchoring transactions with a key derived from the vault's account and the agent's id; the vault allowlists what can be signed | `sign_anchor` in the contract, `near/vault_client.py` | `chain_signature.json`, `nvnm_anchors.json` |
 | NEAR Intents (1-Click) | Prices the funding route: USDC on NEAR into an agent's Hyperliquid perps balance | `near/intents.py` | `intents_quote.json` |
 | NEAR AI Cloud (TEE) | A private risk note on a decision; the enclave's signature over the exact request and response is checked | `near/private_ai.py` | `private_inference.json` |
@@ -111,11 +117,11 @@ rules (`an_agent_cannot_raise_its_own_limits`, `it_will_not_sign_a_token_transfe
 ```bash
 .venv/bin/python near/judge.py --live
 ```
-See: `14 of 14 checks passed`. The five extra checks read
-`vault.zcastor-desk.testnet` through a public NEAR RPC: its owner, its limits,
+See: `17 of 17 checks passed`. The six extra checks read
+`vault.zcastor-desk.testnet` through a public NEAR RPC: its owner and limits,
 decision 0 (granted) and decision 1 (refused, `over_trade_risk`), the
-signer's two-entry allowlist, and that neither agent account holds a
-full-access key. Or look yourself:
+signer's two-entry allowlist, the bidding round (decisions 19 to 23), and that
+no agent account holds a full-access key. Or look yourself:
 <https://testnet.nearblocks.io/address/vault.zcastor-desk.testnet>
 
 **5. The Python tests**
@@ -160,6 +166,33 @@ decision records ──> vault.sign_anchor ──> Chain Signatures ──> NVNM
   market data and a paper venue (real order book, simulated fills).
 - `zcastor/record/capture.py` and `replay/`: every decision's inputs are saved
   and can be re-decided offline.
+
+## Agents competing for one budget
+
+Each agent has its own budget, but the desk has one budget for all of them.
+When several agents have a signal at once, they can't all be funded.
+
+```bash
+.venv/bin/python near/allocator.py demo --offline
+```
+See: five bids, four `GRANTED`, the last `REFUSED over_desk_budget`, and
+`every outcome as predicted`. No keys needed; it uses the contract's rules in
+memory.
+
+How a round works:
+
+1. Each agent submits a bid: the trade it wants and a score, its own estimate
+   of the trade's edge.
+2. The allocator weights each score by the agent's record in the vault. An
+   agent that has lost more than it has won gets less say.
+3. Bids go to the vault in that order, one permit request each.
+4. The vault grants until a limit binds. Losing bids are refused by the
+   contract and stored on chain with the reason.
+
+The allocator only orders the queue. It can't grant anything, and a bid it
+ranks first is still refused if it breaks a limit. The round run on testnet is
+in `near/evidence/swarm_round.json`; `near/judge.py --live` reads it back from
+the chain.
 
 ## What is private, and how to use the agents anyway
 
