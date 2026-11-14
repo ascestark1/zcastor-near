@@ -1,6 +1,6 @@
 {
   "what": "Each agent account's full-access key was deleted. Its only key is a function-call key limited to request_permit, settle and sign_anchor on the vault. The account can no longer transfer NEAR, deploy code, add keys or call any other contract.",
-  "date": "2026-11-11",
+  "date": "2026-11-11 (BTC, ETH), 2026-11-14 (SOL)",
   "network": "NEAR testnet",
   "vault": "vault.zcastor-desk.testnet",
   "agents": {
@@ -18,6 +18,14 @@
       "permit_signed_with_narrow_key_tx": "9G1c3nVQb7ybuTgSFD7Aweev5qGdcXZTSYSppo2vsE4X",
       "deleted_full_access_key": "ed25519:HrtDJrJmWdvomoghdnGUx2aboFCsqEmHdVfJXvusWq5L",
       "delete_key_tx": "4mc6j4DrScbwU7djpxVoK9yUDJRYTGgrJpbdSfQF6XEk",
+      "transfer_attempt": "send 0.01 NEAR to the owner -> 'Error: Transaction requires a full permission access key.'"
+    },
+    "sol.zcastor-desk.testnet": {
+      "function_call_key": "ed25519:HjJ7xBZfieJNkFFKNQ1XxQzDNW5qwbn7WeZkmDD7gGjR",
+      "add_key_tx": "BFhW7B3V1evZ3XDsRQhY2AJTN9GQAu7BpvYw6y6LBshj",
+      "permit_signed_with_narrow_key_tx": "HD63SXTsFmGzU5HyRgT846EHVuF8p6d895NXmmaEKgYv",
+      "deleted_full_access_key": "ed25519:4Eqcpj4UJCkzzit7enXWFRTrymrMrNXPLR52rhvvSFpK",
+      "delete_key_tx": "4imkW4tgBYf8zvgv4HkGfdwW7rc1Sa79tYCfufZXKuov",
       "transfer_attempt": "send 0.01 NEAR to the owner -> 'Error: Transaction requires a full permission access key.'"
     }
   },
