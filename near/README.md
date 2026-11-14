@@ -50,7 +50,7 @@ dead-man halt. `near/vault_client.py` is the same client as a command line.
 ## Also here
 
 - `restrict_agent_keys.sh`: swaps an agent's full-access key for a function-call
-  key limited to the three vault methods. Done on testnet for both agents; see
+  key limited to the three vault methods. Done on testnet for all three agents; see
   `evidence/agent_keys.json`.
 - `allocator.py`: agents bid for the desk's one risk budget; the vault decides.
   `demo --offline` runs it with no keys.
