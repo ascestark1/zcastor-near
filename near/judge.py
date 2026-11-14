@@ -23,7 +23,10 @@ What is checked:
  4. The engine obeys the vault. A real engine, with the vault's rules applied
     locally, fills a trade the rules allow and records a refusal for one they
     don't, without placing an order.
- 5. (--live) The vault on testnet holds the limits and the decision history
+ 5. Agents compete for one budget. Bids from three agents are ranked and sent
+    to a vault with the contract's rules; the best are funded and the rest are
+    refused with the reason. Ranking first does not buy a permit.
+ 6. (--live) The vault on testnet holds the limits and the decision history
     that near/evidence/deployment.json describes, and neither agent account
     holds a full-access key.
 
@@ -183,6 +186,24 @@ RPCS = [u for u in (os.environ.get("NEAR_RPC_URL", ""), "https://rpc.testnet.nea
                     "https://test.rpc.fastnear.com", "https://rpc.testnet.fastnear.com") if u]
 
 
+def step_swarm() -> None:
+    print("\n5. Agents bid for one desk budget; the vault's rules pick the winners")
+    import allocator as al
+    desk = al.SimVault(al.DEMO_LIMITS, {f"{n}.desk.testnet": dict(al.DEMO_AGENT)
+                                        for n in ("btc", "eth", "sol")})
+    r = al.run_round(desk, al.demo_bids(al.snapshot(desk), "judge"))
+    last = r["bids"][-1]
+    check("five $50 bids for a $200 desk: the four best are funded, the fifth is refused",
+          [b["granted"] for b in r["bids"]] == [True, True, True, True, False]
+          and last["actual"] == "over_desk_budget",
+          f"funded ${r['granted_cents'] / 100:.0f} of ${r['bid_for_cents'] / 100:.0f} bid; "
+          f"{last['agent'].split('.')[0]}'s last bid refused as {last['actual']}")
+    greedy = al.run_round(desk, [al.Bid("btc.desk.testnet", "greedy", "Buy", 250000, 9000, 10, 0.99)])
+    check("ranking first does not buy a permit: an over-limit bid is still refused",
+          greedy["bids"][0]["order"] == 0 and not greedy["bids"][0]["granted"],
+          f"top-ranked bid refused as {greedy['bids'][0]['actual']}")
+
+
 def near_view(account: str, method: str, args: dict):
     """A read-only view call. Tries each public RPC in turn (NEAR_RPC_URL first)."""
     last: Exception = RuntimeError("no RPC configured")
@@ -235,7 +256,7 @@ def narrow(permission, vault: str) -> bool:
 
 
 def step_live() -> None:
-    print("\n5. The vault on NEAR testnet (read-only)")
+    print("\n6. The vault on NEAR testnet (read-only)")
     dep = load("deployment.json")
     try:
         status = near_view(dep["vault"], "get_status", {})
@@ -278,6 +299,7 @@ def main(argv: list[str]) -> int:
     step_hash_and_signature()
     step_private_inference()
     step_engine_obeys()
+    step_swarm()
     if "--live" in argv:
         step_live()
     failed = [n for n, ok in results if not ok]

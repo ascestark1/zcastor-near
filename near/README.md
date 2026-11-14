@@ -52,6 +52,8 @@ dead-man halt. `near/vault_client.py` is the same client as a command line.
 - `restrict_agent_keys.sh`: swaps an agent's full-access key for a function-call
   key limited to the three vault methods. Done on testnet for both agents; see
   `evidence/agent_keys.json`.
+- `allocator.py`: agents bid for the desk's one risk budget; the vault decides.
+  `demo --offline` runs it with no keys.
 - `intents.py`: NEAR Intents 1-Click dry-run quote for funding the Hyperliquid balance.
 - `private_ai.py`: NEAR AI Cloud risk note, with the enclave's signature checked.
 - `judge.py`: re-checks the recorded evidence with no keys (`--live` also reads testnet).

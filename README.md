@@ -91,12 +91,13 @@ See: packages install without errors.
 ```bash
 .venv/bin/python near/judge.py
 ```
-See: nine lines starting `PASS`, ending `9 of 9 checks passed`. It checks that
-the vault's transaction hash is the one Ethereum would sign, that the recorded
-Chain Signatures signature recovers to the agent's address, that the recorded
-NEAR AI Cloud signature covers the exact request and response, and that a real
-engine fills a trade the vault's rules allow and records a refusal for one they
-don't.
+See: eleven lines starting `PASS`, ending `11 of 11 checks passed`. It checks
+that the vault's transaction hash is the one Ethereum would sign, that the
+recorded Chain Signatures signature recovers to the agent's address, that the
+recorded NEAR AI Cloud signature covers the exact request and response, that a
+real engine fills a trade the vault's rules allow and records a refusal for one
+they don't, and that when three agents bid for one budget the best bids are
+funded and the rest refused.
 
 **3. The contract's tests**
 ```bash
@@ -121,7 +122,7 @@ full-access key. Or look yourself:
 ```bash
 .venv/bin/python tests/run_all.py
 ```
-See: `34 suites, 602 tests, all passing`.
+See: `35 suites, 613 tests, all passing`.
 
 **6. Deploy your own vault** (needs the [`near` CLI](https://github.com/near/near-cli-rs),
 [`cargo-near`](https://github.com/near/cargo-near) and a free testnet account)
@@ -153,6 +154,8 @@ decision records ──> vault.sign_anchor ──> Chain Signatures ──> NVNM
 
 - `zcastor/execution/vaulted.py` puts the vault between the engine and every
   order. If the vault can't be reached, no order is placed.
+- `near/allocator.py` runs a round when several agents want capital at once
+  (see [Agents competing for one budget](#agents-competing-for-one-budget)).
 - `zcastor/market/hyperliquid.py`, `hub.py`, `hl_paper.py`: Hyperliquid public
   market data and a paper venue (real order book, simulated fills).
 - `zcastor/record/capture.py` and `replay/`: every decision's inputs are saved
@@ -166,7 +169,7 @@ The desk's edge is private and is not in this repository:
   The engine accepts any signal posted to `POST /signal`.
 - **The tuned policy** is replaced by `config/policy.json`, a demo policy whose
   tuned numbers are round placeholders. Do not trade on it.
-- **25 tests** that pin the private policy's numbers are left out. The 602 here
+- **25 tests** that pin the private policy's numbers are left out. The 613 here
   pass against the demo policy.
 
 What is public is what a counterparty needs to trust an agent without seeing
@@ -188,7 +191,10 @@ verify it stays inside its limits, without access to its alpha.
   [nearai-cloud-verifier](https://github.com/nearai/nearai-cloud-verifier).
 - **A permit costs a NEAR transaction**, a few seconds before each fill.
 - **The engine trades one market (BTC) per process.** Signals for other markets
-  are refused until per-market state is added.
+  are refused until per-market state is added. The allocator's rounds are run
+  from a bids file or its demo, not yet from three live engines.
+- **A bid's score is the agent's own claim.** The allocator weights it by the
+  agent's on-chain record but can't check it.
 - **Testnet only.** Nothing here has run on NEAR mainnet.
 
 ## What is new and what is baseline
